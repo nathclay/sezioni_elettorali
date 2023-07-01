@@ -15,9 +15,9 @@ import random
 def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
     #caso elezione amministrative
     if municipio is not None:
-        path=anno+"\\"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
+        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
     else:
-        path=anno+"\\"+anno+"_"+elezione+"_"+com_mun
+        path=anno+"/"+anno+"_"+elezione+"_"+com_mun
 
     if presidente is not None:
         path=path+"_presidente.csv"
@@ -52,9 +52,9 @@ def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, 
     
 def piu_votato(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
     if municipio is not None:
-        path=anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
+        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
     else:
-        path=anno+"_"+elezione+"_"+com_mun
+        path=anno+"/"+anno+"_"+elezione+"_"+com_mun
     dict={'presidente': 'presidente piu votato', 'sindaco': 'sindaco piu votato', 'partito': 'partito piu votato', 'candidato': 'candidato piu votato'}
 
     value_to_subtract=-2
@@ -95,9 +95,9 @@ def piu_votato(anno, elezione, tipologia, com_mun=None, municipio=None, partito=
 def find_partiti(anno, elezione, com_mun=None, municipio=None):
     #caso elezioni amministrative
     if municipio is not None:
-        path=anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapartiti.csv"
+        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapartiti.csv"
     else:
-        path=anno+"_"+elezione+"_"+com_mun+"_listapartiti.csv"
+        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listapartiti.csv"
     df = pd.read_csv(path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
@@ -107,9 +107,9 @@ def find_partiti(anno, elezione, com_mun=None, municipio=None):
 def find_candidati(anno, elezione, partito, com_mun=None, municipio=None):
     #caso elezioni amministrative
     if municipio is not None:
-        file_path=anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listacandidati.csv"
+        file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listacandidati.csv"
     else:
-        file_path=anno+"_"+elezione+"_"+com_mun+"_listacandidati.csv"
+        file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listacandidati.csv"
     df = pd.read_csv(file_path)
     filtered_df = df[df["LISTA"] == partito]
     distinct_candidati = filtered_df["CANDIDATO"].unique().tolist()
@@ -117,7 +117,7 @@ def find_candidati(anno, elezione, partito, com_mun=None, municipio=None):
 
 def find_presidenti(anno, elezione, com_mun, municipio):
     #solo caso municipali
-    file_path=anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapresidenti.csv"
+    file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapresidenti.csv"
     df = pd.read_csv(file_path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
@@ -126,7 +126,7 @@ def find_presidenti(anno, elezione, com_mun, municipio):
 
 def find_sindaci(anno, elezione, com_mun):
     #solo caso comunali
-    file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
+    file_path=anno+"/"+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
     df = pd.read_csv(file_path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
@@ -228,12 +228,12 @@ if st.sidebar.button('Invia'):
     #caso visualizzazione di un solo municipio
     else:
         zoom=13
-        gdf = gpd.read_file("buildings\\buildings.shp")
+        gdf = gpd.read_file("buildings/buildings.shp")
         gdf=gdf[gdf['municipio']==municipio]
-        sezioni_elettorali = gpd.read_file("sezioni_elettorali\\tutta_roma.shp")
+        sezioni_elettorali = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
         sezioni_elettorali=sezioni_elettorali[sezioni_elettorali['municipio']==municipio]
         sezioni_elettorali=pd.merge(sezioni_elettorali, data, left_on="sezione", right_on="SEZIONE")
-        borders_municipi=gpd.read_file("borders_municipi\\borders_municipi.shp")
+        borders_municipi=gpd.read_file("borders_municipi/borders_municipi.shp")
         borders_municipi=borders_municipi[borders_municipi['municipio']==municipio]
     
     merged = pd.merge(gdf, data, left_on="sezione", right_on="SEZIONE")
