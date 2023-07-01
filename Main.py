@@ -126,7 +126,7 @@ def find_presidenti(anno, elezione, com_mun, municipio):
 
 def find_sindaci(anno, elezione, com_mun):
     #solo caso comunali
-    file_path=anno+"/"+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
+    file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
     df = pd.read_csv(file_path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
