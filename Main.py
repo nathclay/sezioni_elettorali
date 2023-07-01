@@ -221,9 +221,9 @@ if st.sidebar.button('Invia'):
     #caso comunali e visualizzazione di tutta roma
     if municipio==0:
         zoom=10
-        gdf = gpd.read_file("sezioni_elettorali\\tutta_roma.shp")
-        sezioni_elettorali = gpd.read_file("sezioni_elettorali\\tutta_roma.shp")
-        borders_municipi=gpd.read_file("borders_municipi\\borders_municipi.shp")
+        gdf = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
+        sezioni_elettorali = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
+        borders_municipi=gpd.read_file("borders_municipi/borders_municipi.shp")
     
     #caso visualizzazione di un solo municipio
     else:
