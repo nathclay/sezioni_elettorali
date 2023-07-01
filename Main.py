@@ -8,8 +8,17 @@ import streamlit.components.v1 as components
 import pydeck as pdk
 from matplotlib.colors import ListedColormap
 import random
+import zipfile
 
-path_folder = "C:\\Users\\nath1\\Desktop\\MELBOURNE\\Sezioni_Elettorali\\Risultati_elettorali\\roma\\"
+# Specify the path to the zip file
+zip_path = 'sezioni_elettorali.zip'
+
+# Open the zip file in read mode
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+    # Extract all the files in the zip to a specified directory
+    zip_ref.extractall('sezioni_elettorali')
+
+path_folder = "sezioni_elettorali"
 
 #funzioni
 def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
