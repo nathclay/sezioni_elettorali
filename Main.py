@@ -228,7 +228,7 @@ if st.sidebar.button('Invia'):
     #caso visualizzazione di un solo municipio
     else:
         zoom=13
-        gdf = gpd.read_file("buildings/buildings_"+str(municipio)+".shp")
+        gdf = gpd.read_file("buildings/buildings_municipio_"+str(municipio)+".shp")
         gdf=gdf[gdf['municipio']==municipio]
         sezioni_elettorali = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
         sezioni_elettorali=sezioni_elettorali[sezioni_elettorali['municipio']==municipio]
