@@ -9,15 +9,16 @@ import pydeck as pdk
 from matplotlib.colors import ListedColormap
 import random
 
-
+path_folder = ""
+st.set_page_config(layout='wide')
 
 #funzioni
 def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
     #caso elezione amministrative
     if municipio is not None:
-        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
     else:
-        path=anno+"/"+anno+"_"+elezione+"_"+com_mun
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun
 
     if presidente is not None:
         path=path+"_presidente.csv"
@@ -52,9 +53,9 @@ def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, 
     
 def piu_votato(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
     if municipio is not None:
-        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
     else:
-        path=anno+"/"+anno+"_"+elezione+"_"+com_mun
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun
     dict={'presidente': 'presidente piu votato', 'sindaco': 'sindaco piu votato', 'partito': 'partito piu votato', 'candidato': 'candidato piu votato'}
 
     value_to_subtract=-2
@@ -95,21 +96,22 @@ def piu_votato(anno, elezione, tipologia, com_mun=None, municipio=None, partito=
 def find_partiti(anno, elezione, com_mun=None, municipio=None):
     #caso elezioni amministrative
     if municipio is not None:
-        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapartiti.csv"
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapartiti.csv"
     else:
-        path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listapartiti.csv"
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listapartiti.csv"
     df = pd.read_csv(path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
     df.sort_index(inplace=True)  # Sort the index
     return df.iloc[:, 0].tolist()
 
+
 def find_candidati(anno, elezione, partito, com_mun=None, municipio=None):
     #caso elezioni amministrative
     if municipio is not None:
-        file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listacandidati.csv"
+        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listacandidati.csv"
     else:
-        file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listacandidati.csv"
+        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listacandidati.csv"
     df = pd.read_csv(file_path)
     filtered_df = df[df["LISTA"] == partito]
     distinct_candidati = filtered_df["CANDIDATO"].unique().tolist()
@@ -117,7 +119,7 @@ def find_candidati(anno, elezione, partito, com_mun=None, municipio=None):
 
 def find_presidenti(anno, elezione, com_mun, municipio):
     #solo caso municipali
-    file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapresidenti.csv"
+    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapresidenti.csv"
     df = pd.read_csv(file_path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
@@ -126,12 +128,14 @@ def find_presidenti(anno, elezione, com_mun, municipio):
 
 def find_sindaci(anno, elezione, com_mun):
     #solo caso comunali
-    file_path=anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
+    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
     df = pd.read_csv(file_path, header=None)
     df.loc[-1] = ["Più votato"]
     df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
     df.sort_index(inplace=True)  # Sort the index
     return df.iloc[:, 0].tolist()
+
+
 
 
 #qui il codice del sidebar per scegliere l'elezione
@@ -202,152 +206,207 @@ if elezione=='amministrative':
 
 
 #qui il main
-st.header ("Tool grafico dati elettorali di Roma")
 
-#se abbiamo scelto comunali possiamo visualizzare la mappa di tutta roma o di uno specifico municipio
+
+left_column, right_column = st.columns([0.75, 0.2])
+
 if com_mun=='comunali':
-    selezione=st.sidebar.selectbox('Vuoi visualizzare la mappa di tutta Roma o di un singolo municipio?', ['Tutta Roma', 'Municipio 1', 'Municipio 2', 'Municipio 3', 'Municipio 4', 'Municipio 5', 'Municipio 6', 'Municipio 7', 'Municipio 8', 'Municipio 9', 'Municipio 10', 'Municipio 11', 'Municipio 12', 'Municipio 13', 'Municipio 14', 'Municipio 15'])
-    values_municipi={'Tutta Roma':0, 'Municipio 1': 1, 'Municipio 2': 2, 'Municipio 3': 3, 'Municipio 4': 4, 'Municipio 5': 5, 'Municipio 6': 6, 'Municipio 7': 7, 'Municipio 8': 8, 'Municipio 9': 9, 'Municipio 10': 10, 'Municipio 11': 11, 'Municipio 12': 12, 'Municipio 13': 13, 'Municipio 14': 14, 'Municipio 15':15}
-    municipio = values_municipi[selezione]
+            selezione=st.sidebar.selectbox('Vuoi visualizzare la mappa di tutta Roma o di un singolo municipio?', ['Tutta Roma', 'Municipio 1', 'Municipio 2', 'Municipio 3', 'Municipio 4', 'Municipio 5', 'Municipio 6', 'Municipio 7', 'Municipio 8', 'Municipio 9', 'Municipio 10', 'Municipio 11', 'Municipio 12', 'Municipio 13', 'Municipio 14', 'Municipio 15'])
+            values_municipi={'Tutta Roma':0, 'Municipio 1': 1, 'Municipio 2': 2, 'Municipio 3': 3, 'Municipio 4': 4, 'Municipio 5': 5, 'Municipio 6': 6, 'Municipio 7': 7, 'Municipio 8': 8, 'Municipio 9': 9, 'Municipio 10': 10, 'Municipio 11': 11, 'Municipio 12': 12, 'Municipio 13': 13, 'Municipio 14': 14, 'Municipio 15':15}
+            municipio = values_municipi[selezione]
 
 #bottone per far partire il download solo dopo la selezione 
-if st.sidebar.button('Invia'):
-    #coordinate dei centroidi dei municipi
-    centroids={'Lon':[12.4964, 12.47794957, 12.50118016, 12.55432441, 12.59134303, 12.57556528, 12.68711693, 
-                      12.58189857, 12.52916829, 12.49781296, 12.36309958, 12.3767787, 12.4584861, 12.34611241, 12.34548312, 12.41567276], 
-               'Lat': [41.9028, 41.89862783, 41.92070444, 41.99643881, 41.93216218, 41.88910484,
-                41.88754993, 41.83904195, 41.82866719, 41.75764874, 41.7393902, 41.83066297, 41.8771455, 41.91044296, 41.97566369, 42.02972271]}
-    
-    #caso comunali e visualizzazione di tutta roma
-    if municipio==0:
-        zoom=10
-        gdf = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
-        sezioni_elettorali = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
-        borders_municipi=gpd.read_file("borders_municipi/borders_municipi.shp")
-    
-    #caso visualizzazione di un solo municipio
-    else:
-        zoom=13
-        gdf = gpd.read_file("buildings/buildings_municipio_"+str(municipio)+".shp")
-        gdf=gdf[gdf['municipio']==municipio]
-        sezioni_elettorali = gpd.read_file("sezioni_elettorali/tutta_roma.shp")
-        sezioni_elettorali=sezioni_elettorali[sezioni_elettorali['municipio']==municipio]
-        sezioni_elettorali=pd.merge(sezioni_elettorali, data, left_on="sezione", right_on="SEZIONE")
-        borders_municipi=gpd.read_file("borders_municipi/borders_municipi.shp")
-        borders_municipi=borders_municipi[borders_municipi['municipio']==municipio]
-    
-    merged = pd.merge(gdf, data, left_on="sezione", right_on="SEZIONE")
-    val={'Voti': 'Voti', 'Più votato': 'Più votato'}
-
-    if piu_vot==False:
-        valore=val['Voti']
-        color_scale = [[255, 255, 255, 100],  # White
-        [0, 255, 0, 100],      # Green
-        [255, 0, 0, 100]       # Red
-        ]
-        # Define the maximum value of the "voti" column
-        max_voti = merged['Voti'].max()
-        # Normalize the "voti" values between 0 and 1
-        if max_voti != 0:
-            merged['normalized_voti'] = merged['Voti'] / max_voti
+boolean = st.sidebar.button('Invia')
+if not boolean:
+    st.header('Tool grafico dati elettorali di Roma')
+    st.write('Seleziona un\'elezione nel menu a sinistra')
+if boolean:
+    with left_column:
+        #coordinate dei centroidi dei municipi. Start from 0=tutta roma
+        centroids={'Lon':[12.4964,12.4770581,12.4917441, 12.5301001, 12.5403471, 12.5565151, 12.6148051, 12.5171351, 
+                        12.4819491, 12.4601261, 12.2868461, 12.4467971, 12.4584861, 12.4129485, 12.4089303, 12.4478257], 
+                'Lat': [41.9028, 41.8963649, 41.919371, 41.941734, 41.908605, 41.8851969, 41.8827769, 41.8783239, 
+                        41.8653769, 41.81898, 41.743652, 41.852685, 41.8771455, 41.8974907, 41.9254917, 41.943352]}
+        
+        #caso comunali e visualizzazione di tutta roma
+        if municipio==0:
+            zoom=10
+            opacity=0.5
+            gdf = gpd.read_file(path_folder+"sezioni_elettorali\\tutta_roma.shp")
+            sezioni_elettorali = gpd.read_file(path_folder+"sezioni_elettorali\\tutta_roma.shp")
+            borders_municipi=gpd.read_file(path_folder+"borders_municipi\\borders_municipi.shp")
+        
+        #caso visualizzazione di un solo municipio
         else:
-            merged['normalized_voti'] = 0
-        # Define a function to convert a normalized value to a color
-        def get_fill_color(v):
-            # Interpolate the color based on the normalized value
-            if v <= 0:
-                return color_scale[0]
-            elif v >= 1:
-                return color_scale[-1]
+            zoom=13
+            opacity=1
+            gdf = gpd.read_file(path_folder+"buildings\\buildings_municipio_"+str(municipio)+".shp")
+            gdf=gdf[gdf['municipio']==municipio]
+            sezioni_elettorali = gpd.read_file(path_folder+"sezioni_elettorali\\tutta_roma.shp")
+            sezioni_elettorali=sezioni_elettorali[sezioni_elettorali['municipio']==municipio]
+            sezioni_elettorali=pd.merge(sezioni_elettorali, data, left_on="sezione", right_on="SEZIONE")
+            borders_municipi=gpd.read_file(path_folder+"borders_municipi\\borders_municipi.shp")
+            borders_municipi=borders_municipi[borders_municipi['municipio']==municipio]
+        
+        merged = pd.merge(gdf, data, left_on="sezione", right_on="SEZIONE")
+        val={'Voti': 'Voti', 'Più votato': 'Più votato'}
+
+        #caso specifico candidato/presidente/partito
+        if piu_vot==False:
+            valore=val['Voti']
+            color_scale = [[255, 255, 255, 100],  # White
+            [0, 0, 255, 100],      # Blue
+            [255, 0, 0, 100]       # Red
+            ]
+            # Define the maximum value of the "voti" column
+            max_voti = merged['Voti'].max()
+            # Normalize the "voti" values between 0 and 1
+            if max_voti != 0:
+                merged['normalized_voti'] = merged['Voti'] / max_voti
             else:
-                index = int(v * (len(color_scale) - 1))
-                r = int(color_scale[index][0] * (1 - v) + color_scale[index+1][0] * v)
-                g = int(color_scale[index][1] * (1 - v) + color_scale[index+1][1] * v)
-                b = int(color_scale[index][2] * (1 - v) + color_scale[index+1][2] * v)
-                a = int(color_scale[index][3] * (1 - v) + color_scale[index+1][3] * v)
-                return [r, g, b, a]
-        merged['fill_color'] = merged['normalized_voti'].apply(get_fill_color)
-        tooltip = {
-                "html": "<b>Sezione:</b> {SEZIONE}<br> <b>Voti:</b> {Voti}<br> ",
+                merged['normalized_voti'] = 0
+            # Define a function to convert a normalized value to a color
+            def get_fill_color(v):
+                # Interpolate the color based on the normalized value
+                if v <= 0:
+                    return color_scale[0]
+                elif v >= 1:
+                    return color_scale[-1]
+                else:
+                    index = int(v * (len(color_scale) - 1))
+                    r = int(color_scale[index][0] * (1 - v) + color_scale[index+1][0] * v)
+                    g = int(color_scale[index][1] * (1 - v) + color_scale[index+1][1] * v)
+                    b = int(color_scale[index][2] * (1 - v) + color_scale[index+1][2] * v)
+                    a = int(color_scale[index][3] * (1 - v) + color_scale[index+1][3] * v)
+                    return [r, g, b, a]
+            merged['fill_color'] = merged['normalized_voti'].apply(get_fill_color)
+            tooltip = {
+                    "html": "<b>Sezione:</b> {SEZIONE}<br> <b>Voti:</b> {Voti}<br> ",
+                    "style": {
+                        "backgroundColor": "white",
+                        "color": "black"
+                        },
+                    "layer": 0
+                }
+            
+            max = data["Voti"].max()
+            min = data["Voti"].min()
+            median = data["Voti"].median()
+
+            #qui la legenda
+            legend_html = "<table style='border-collapse: collapse;'>"
+            # First row with legend labels
+            legend_html += "<tr>"
+            legend_html += "<td style='text-align: left; color: white;'>{} voti</td>".format(int(min))
+            legend_html += "<td style='text-align: center; color: blue;'>{} voti</td>".format(int(median))
+            legend_html += "<td style='text-align: right; color: red;'>{} voti</td>".format(int(max))
+            legend_html += "</tr>"
+            # Second row with gradient rectangle
+            legend_html += "<tr>"
+            legend_html += "<td colspan='3' style='height: 20px; width: 500px; background: linear-gradient(to right, "
+            for i, color in enumerate(color_scale):
+                legend_html += f"rgba({color[0]}, {color[1]}, {color[2]}, {i / (len(color_scale) - 1)}), "
+            legend_html = legend_html.rstrip(", ")
+            legend_html += ");'></td>"
+            legend_html += "</tr>"
+            legend_html += "</table>"
+            st.markdown(legend_html, unsafe_allow_html=True)
+
+        
+        #caso piu votato
+        else:
+            valore=val['Più votato']
+            predefined_colors = [[255, 0, 0, 100],   # Red
+                    [0, 255, 0, 100],   # Green
+                    [0, 0, 255, 100],   # Blue
+                    [128, 0, 128, 100], # Purple
+                    [255, 255, 0, 100]  # Yellow
+                    ]
+            # Get distinct values from the "piu votato" column
+            distinct_values = merged['Più votato'].unique()
+            # Assign predefined colors to the first five distinct values
+            color_mapping = dict(zip(distinct_values[:5], predefined_colors))
+            # Generate random colors for additional distinct values, if any
+            if len(distinct_values) > 5:
+                random_colors = [[random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), 100] for _ in range(len(distinct_values) - 5)]
+                color_mapping.update(dict(zip(distinct_values[5:], random_colors)))
+            # Define a function to get the fill color based on the "piu votato" value
+            def get_fill_color(p):
+                return color_mapping.get(p, [255, 255, 255, 100])  # Default to white color if value not found
+            merged['fill_color'] = merged['Più votato'].apply(get_fill_color)
+            tooltip = {
+                "html": "<b>Sezione:</b> {SEZIONE}<br> <b>Più votato:</b> {Più votato}<br> ",
                 "style": {
                     "backgroundColor": "white",
                     "color": "black"
-                    },
-                "layer": 0
+                }
             }
-    else:
-        valore=val['Più votato']
-        predefined_colors = [[255, 0, 0, 100],   # Red
-                [0, 255, 0, 100],   # Green
-                [0, 0, 255, 100],   # Blue
-                [128, 0, 128, 100], # Purple
-                [255, 255, 0, 100]  # Yellow
-                ]
-        # Get distinct values from the "piu votato" column
-        distinct_values = merged['Più votato'].unique()
-        # Assign predefined colors to the first five distinct values
-        color_mapping = dict(zip(distinct_values[:5], predefined_colors))
-        # Generate random colors for additional distinct values, if any
-        if len(distinct_values) > 5:
-            random_colors = [[random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), 100] for _ in range(len(distinct_values) - 5)]
-            color_mapping.update(dict(zip(distinct_values[5:], random_colors)))
-        # Define a function to get the fill color based on the "piu votato" value
-        def get_fill_color(p):
-            return color_mapping.get(p, [255, 255, 255, 100])  # Default to white color if value not found
-        merged['fill_color'] = merged['Più votato'].apply(get_fill_color)
-        tooltip = {
-            "html": "<b>Sezione:</b> {SEZIONE}<br> <b>Più votato:</b> {Più votato}<br> ",
-            "style": {
-                "backgroundColor": "white",
-                "color": "black"
-            }
-        }
+            #qui la legenda
+            legend_html = "<div>"
+            legend_html += "<table>"
+            legend_html += "<tr>"
+            for value, color in color_mapping.items():
+                color_string = f"rgba({color[0]}, {color[1]}, {color[2]}, {color[3]/255})"
+                legend_html += f"<td style='text-align: center;'>"
+                legend_html += f"<span style='color: white;'>{value}</span>"
+                legend_html += f"<div style='width: 100px; height: 10px; background-color: {color_string};'></div>"
+                legend_html += "</td>"
+            legend_html += "</tr>"
+            legend_html += "</table>"
+            legend_html += "</div>"
+            st.markdown(legend_html, unsafe_allow_html=True)
 
-    layer1 = pdk.Layer(
-        "GeoJsonLayer",
-        data=sezioni_elettorali,
-        get_fill_color=[0, 0, 0, 0],  # Transparent fill color
-        get_line_color=[0, 0, 0],  # Black border color
-        filled=True,
-        stroked=True,
-        extruded=False,
-        wireframe=False,
-        line_width_min_pixels=1,
-        pickable=True,
-    )
-    layer2 = pdk.Layer(
-        "GeoJsonLayer",
-        data=merged,
-        get_fill_color='fill_color',
-        auto_highlight=True,
-        pickable=True,
-    )
-    layer3 = pdk.Layer(
-        "GeoJsonLayer",
-        data=borders_municipi,
-        get_fill_color=[0, 0, 0, 0],  # Transparent fill color
-        get_line_color=[255, 0, 0, 100],  # Black border color
-        filled=True,
-        stroked=True,
-        extruded=False,
-        wireframe=False,
-        line_width_min_pixels=3,
-    )
-    # Create a view state to set the initial map center and zoom level
-    view_state = pdk.ViewState(
-        latitude= centroids['Lat'][municipio],
-        longitude=centroids['Lon'][municipio],
-        zoom=zoom,
-    )
-    # Create the Deck object with the layer and view state
-    deck = pdk.Deck(
-        layers=[layer1, layer2,layer3], 
-        initial_view_state=view_state, 
-        map_style="mapbox://styles/mapbox/streets-v12",
-        tooltip=tooltip
-    )
 
-    st.pydeck_chart(deck)
+        layer1 = pdk.Layer(
+            "GeoJsonLayer",
+            data=sezioni_elettorali,
+            get_fill_color=[0, 0, 0, 0],  # Transparent fill color
+            get_line_color=[0, 0, 0],  # Black border color
+            filled=True,
+            stroked=True,
+            extruded=False,
+            wireframe=False,
+            line_width_min_pixels=0.5,
+            pickable=True
+        )
+        layer2 = pdk.Layer(
+            "GeoJsonLayer",
+            data=merged,
+            get_fill_color='fill_color',
+            auto_highlight=True,
+            opacity=opacity,
+            pickable=True,
+        )
+        layer3 = pdk.Layer(
+            "GeoJsonLayer",
+            data=borders_municipi,
+            get_fill_color=[0, 0, 0, 0],  # Transparent fill color
+            get_line_color=[255, 0, 0, 100],  # Red border color
+            filled=True,
+            stroked=True,
+            extruded=False,
+            wireframe=False,
+            line_width_min_pixels=2,
+        )
+        # Create a view state to set the initial map center and zoom level
+        view_state = pdk.ViewState(
+            latitude= centroids['Lat'][municipio],
+            longitude=centroids['Lon'][municipio],
+            zoom=zoom,
+        )
+        # Create the Deck object with the layer and view state
+        deck = pdk.Deck(
+            layers=[layer1, layer2,layer3], 
+            initial_view_state=view_state, 
+            map_style="mapbox://styles/nathclay1/clilc9k49006w01r82tvm8ud2",
+            tooltip=tooltip
+        )
+        st.pydeck_chart(deck)
 
+    with right_column:
+        st.markdown("<div style='margin-top: 150px;'>Clicca su una sezione per visualizzare i dati completi.</div>", unsafe_allow_html=True)
+        st.dataframe(data['sezione', 'Voti'])
+
+    
 
 
