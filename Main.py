@@ -232,20 +232,20 @@ if boolean:
         if municipio==0:
             zoom=10
             opacity=0.5
-            gdf = gpd.read_file(path_folder+"sezioni_elettorali\\tutta_roma.shp")
-            sezioni_elettorali = gpd.read_file(path_folder+"sezioni_elettorali\\tutta_roma.shp")
-            borders_municipi=gpd.read_file(path_folder+"borders_municipi\\borders_municipi.shp")
+            gdf = gpd.read_file(path_folder+"sezioni_elettorali/tutta_roma.shp")
+            sezioni_elettorali = gpd.read_file(path_folder+"sezioni_elettorali/tutta_roma.shp")
+            borders_municipi=gpd.read_file(path_folder+"borders_municipi/borders_municipi.shp")
         
         #caso visualizzazione di un solo municipio
         else:
             zoom=13
             opacity=1
-            gdf = gpd.read_file(path_folder+"buildings\\buildings_municipio_"+str(municipio)+".shp")
+            gdf = gpd.read_file(path_folder+"buildings/buildings_municipio_"+str(municipio)+".shp")
             gdf=gdf[gdf['municipio']==municipio]
-            sezioni_elettorali = gpd.read_file(path_folder+"sezioni_elettorali\\tutta_roma.shp")
+            sezioni_elettorali = gpd.read_file(path_folder+"sezioni_elettorali/tutta_roma.shp")
             sezioni_elettorali=sezioni_elettorali[sezioni_elettorali['municipio']==municipio]
             sezioni_elettorali=pd.merge(sezioni_elettorali, data, left_on="sezione", right_on="SEZIONE")
-            borders_municipi=gpd.read_file(path_folder+"borders_municipi\\borders_municipi.shp")
+            borders_municipi=gpd.read_file(path_folder+"borders_municipi/borders_municipi.shp")
             borders_municipi=borders_municipi[borders_municipi['municipio']==municipio]
         
         merged = pd.merge(gdf, data, left_on="sezione", right_on="SEZIONE")
