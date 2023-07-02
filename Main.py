@@ -404,8 +404,11 @@ if boolean:
         st.pydeck_chart(deck)
 
     with right_column:
-        st.markdown("<div style='margin-top: 150px;'>Clicca su una sezione per visualizzare i dati completi.</div>", unsafe_allow_html=True)
-        st.dataframe(data['sezione', 'Voti'])
+        if piu_vot==True:
+            st.markdown("<div style='margin-top: 150px;'>Clicca su una sezione per visualizzare i dati completi.</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='margin-top: 70px;'></div>", unsafe_allow_html=True)
+            st.dataframe(data[['SEZIONE', 'Voti']])
 
     
 
