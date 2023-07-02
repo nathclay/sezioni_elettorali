@@ -343,7 +343,7 @@ if st.sidebar.button('Invia'):
     deck = pdk.Deck(
         layers=[layer1, layer2,layer3], 
         initial_view_state=view_state, 
-        map_style="light",
+        map_style="mapbox://styles/mapbox/streets-v12",
         tooltip=tooltip
     )
 
