@@ -9,7 +9,7 @@ import pydeck as pdk
 from matplotlib.colors import ListedColormap
 import random
 
-path_folder = "C:\\Users\\nath1\\Desktop\\MELBOURNE\\Sezioni_Elettorali\\Risultati_elettorali\\roma\\"
+path_folder = ""
 st.set_page_config(layout='wide')
 
 #funzioni
