@@ -165,7 +165,7 @@ if elezione=='amministrative':
     com_mun=st.sidebar.selectbox('Municipali o comunali?',['comunali', 'municipali'])
     #distionzione municipali/comunali
     if com_mun=='municipali':
-        municipio=st.sidebar.selectbox('Seleziona il municipio', [1,2,3,4,5,6,7,8,9,10,11,12,13,15])
+        municipio=st.sidebar.selectbox('Seleziona il municipio', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
         tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza','presidente','partito','candidato', 'ballottaggio'])
     else:
         tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza','sindaco','partito','candidato', 'ballottaggio'])
