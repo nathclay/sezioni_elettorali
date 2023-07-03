@@ -9,7 +9,7 @@ import pydeck as pdk
 from matplotlib.colors import ListedColormap
 import random
 
-path_folder = ""
+path_folder = "C:\\Users\\nath1\\Desktop\\MELBOURNE\\Sezioni_Elettorali\\Risultati_elettorali\\roma\\"
 st.set_page_config(layout='wide')
 
 #funzioni
@@ -20,12 +20,17 @@ def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, 
     else:
         path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun
 
+
     if presidente is not None:
         path=path+"_presidente.csv"
         df=pd.read_csv(path) 
         df['Presidente']=presidente
         filtered_df = df[["SEZIONE", 'Presidente',presidente]]
         filtered_df.rename(columns={presidente: 'Voti'}, inplace=True) 
+    elif tipologia=='affluenza':
+        df=pd.read_csv(path+"_partito.csv")
+        filtered_df=df[['SEZIONE','AFFLUENZA']]
+        filtered_df.rename(columns={'AFFLUENZA':'Voti'}, inplace=True)
     elif sindaco is not None:
         path=path+"_sindaco.csv"
         df=pd.read_csv(path)
@@ -96,44 +101,44 @@ def piu_votato(anno, elezione, tipologia, com_mun=None, municipio=None, partito=
 def find_partiti(anno, elezione, com_mun=None, municipio=None):
     #caso elezioni amministrative
     if municipio is not None:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapartiti.csv"
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_partito.csv"
+        subtract=-3
     else:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listapartiti.csv"
-    df = pd.read_csv(path, header=None)
-    df.loc[-1] = ["Più votato"]
-    df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
-    df.sort_index(inplace=True)  # Sort the index
-    return df.iloc[:, 0].tolist()
+        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_partito.csv"
+        subtract=-2
+    df = pd.read_csv(path)
+    header = df.columns[1:subtract].tolist()  
+    header.insert(0,'Più votato')
+    return header
 
 
 def find_candidati(anno, elezione, partito, com_mun=None, municipio=None):
     #caso elezioni amministrative
     if municipio is not None:
-        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listacandidati.csv"
+        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_candidato.csv"
     else:
-        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listacandidati.csv"
+        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_candidato.csv"
     df = pd.read_csv(file_path)
-    filtered_df = df[df["LISTA"] == partito]
+    distinct_candidati = df.drop_duplicates(subset='CANDIDATO')[['LISTA', 'CANDIDATO']]
+    filtered_df = distinct_candidati[df["LISTA"] == partito]
     distinct_candidati = filtered_df["CANDIDATO"].unique().tolist()
     return distinct_candidati
 
 def find_presidenti(anno, elezione, com_mun, municipio):
     #solo caso municipali
-    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_listapresidenti.csv"
-    df = pd.read_csv(file_path, header=None)
-    df.loc[-1] = ["Più votato"]
-    df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
-    df.sort_index(inplace=True)  # Sort the index
-    return df.iloc[:, 0].tolist()
+    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_presidente.csv"
+    df = pd.read_csv(file_path)
+    header = df.columns[1:-2].tolist()  
+    header.insert(0,'Più votato')
+    return header
 
 def find_sindaci(anno, elezione, com_mun):
     #solo caso comunali
-    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_listasindaci.csv"
-    df = pd.read_csv(file_path, header=None)
-    df.loc[-1] = ["Più votato"]
-    df.index = df.index + 1  # Shift the index by 1 to accommodate the new row
-    df.sort_index(inplace=True)  # Sort the index
-    return df.iloc[:, 0].tolist()
+    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_sindaco.csv"
+    df = pd.read_csv(file_path)
+    header = df.columns[1:-2].tolist()  
+    header.insert(0,'Più votato')
+    return header
 
 
 
@@ -156,15 +161,20 @@ elezione=st.sidebar.selectbox('Scegli l\'elezione', val)
 #caso elezioni amministrative
 if elezione=='amministrative':
     piu_vot=False
+    affl=False
     com_mun=st.sidebar.selectbox('Municipali o comunali?',['comunali', 'municipali'])
     #distionzione municipali/comunali
     if com_mun=='municipali':
         municipio=st.sidebar.selectbox('Seleziona il municipio', [1,2,3,4,5,6,7,8,9,10,11,12,13,15])
-        tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['presidente','partito','candidato', 'ballottaggio'])
+        tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza','presidente','partito','candidato', 'ballottaggio'])
     else:
-        tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['sindaco','partito','candidato', 'ballottaggio'])
+        tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza','sindaco','partito','candidato', 'ballottaggio'])
         municipio=None
-
+    
+    if tipologia == 'affluenza':
+        turno=st.sidebar.selectbox('Primo turno o ballottaggio?', ['primo turno', 'ballottaggio'])
+        data=dati(anno, elezione, tipologia, com_mun, municipio)
+        affl=True
     if tipologia == 'candidato':
         values=find_partiti(anno, elezione, com_mun, municipio)
         values.pop(0)
@@ -249,25 +259,16 @@ if boolean:
             borders_municipi=borders_municipi[borders_municipi['municipio']==municipio]
         
         merged = pd.merge(gdf, data, left_on="sezione", right_on="SEZIONE")
-        val={'Voti': 'Voti', 'Più votato': 'Più votato'}
 
-        #caso specifico candidato/presidente/partito
-        if piu_vot==False:
-            valore=val['Voti']
-            color_scale = [[255, 255, 255, 100],  # White
+        val={'Voti': 'Voti', 'Più votato': 'Più votato'}
+        color_scale = [[255, 255, 255, 100],  # White
             [0, 0, 255, 100],      # Blue
             [255, 0, 0, 100]       # Red
             ]
-            # Define the maximum value of the "voti" column
-            max_voti = merged['Voti'].max()
-            # Normalize the "voti" values between 0 and 1
-            if max_voti != 0:
-                merged['normalized_voti'] = merged['Voti'] / max_voti
-            else:
-                merged['normalized_voti'] = 0
-            # Define a function to convert a normalized value to a color
-            def get_fill_color(v):
+        def get_fill_color(v):
                 # Interpolate the color based on the normalized value
+                if pd.isna(v):
+                    return [0, 0, 0, 0]  
                 if v <= 0:
                     return color_scale[0]
                 elif v >= 1:
@@ -279,6 +280,53 @@ if boolean:
                     b = int(color_scale[index][2] * (1 - v) + color_scale[index+1][2] * v)
                     a = int(color_scale[index][3] * (1 - v) + color_scale[index+1][3] * v)
                     return [r, g, b, a]
+        #caso affluenza
+        if affl==True:
+            merged['fill_color'] = merged['Voti'].apply(get_fill_color)
+            merged['voti_percent'] = merged['Voti'].apply(lambda x: f'{x:.2%}')
+            tooltip = {
+                    "html": "<b>Sezione:</b> {SEZIONE}<br> <b>Affluenza:</b> {voti_percent}<br> ",
+                    "style": {
+                        "backgroundColor": "white",
+                        "color": "black"
+                        },
+                    "layer": 0
+                }
+        
+            max = merged["Voti"].max()
+            min = merged["Voti"].min()
+            median = merged["Voti"].median()
+
+            #qui la legenda
+            legend_html = "<table style='border-collapse: collapse;'>"
+            # First row with legend labels
+            legend_html += "<tr>"
+            legend_html += "<td style='text-align: left; color: white;'> Affluenza: {:.2%}</td>".format(min)
+            legend_html += "<td style='text-align: center; color: blue;'> Affluenza: {:.2%}</td>".format(median)
+            legend_html += "<td style='text-align: right; color: red;'> Affluenza: {:.2%}</td>".format(max)
+            legend_html += "</tr>"
+            # Second row with gradient rectangle
+            legend_html += "<tr>"
+            legend_html += "<td colspan='3' style='height: 20px; width: 500px; background: linear-gradient(to right, "
+            for i, color in enumerate(color_scale):
+                legend_html += f"rgba({color[0]}, {color[1]}, {color[2]}, {i / (len(color_scale) - 1)}), "
+            legend_html = legend_html.rstrip(", ")
+            legend_html += ");'></td>"
+            legend_html += "</tr>"
+            legend_html += "</table>"
+            st.markdown(legend_html, unsafe_allow_html=True)
+            
+
+        #caso specifico candidato/presidente/partito
+        elif piu_vot==False:
+            # Define the maximum value of the "voti" column
+            max_voti = merged['Voti'].max()
+            # Normalize the "voti" values between 0 and 1
+            if max_voti != 0:
+                merged['normalized_voti'] = merged['Voti'] / max_voti
+            else:
+                merged['normalized_voti'] = 0
+            # Define a function to convert a normalized value to a color
             merged['fill_color'] = merged['normalized_voti'].apply(get_fill_color)
             tooltip = {
                     "html": "<b>Sezione:</b> {SEZIONE}<br> <b>Voti:</b> {Voti}<br> ",
@@ -289,16 +337,16 @@ if boolean:
                     "layer": 0
                 }
             
-            max = data["Voti"].max()
-            min = data["Voti"].min()
-            median = data["Voti"].median()
+            max = merged["Voti"].max()
+            min = merged["Voti"].min()
+            average = merged["Voti"].mean()
 
             #qui la legenda
             legend_html = "<table style='border-collapse: collapse;'>"
             # First row with legend labels
             legend_html += "<tr>"
             legend_html += "<td style='text-align: left; color: white;'>{} voti</td>".format(int(min))
-            legend_html += "<td style='text-align: center; color: blue;'>{} voti</td>".format(int(median))
+            legend_html += "<td style='text-align: center; color: blue;'>{} voti</td>".format(int(average))
             legend_html += "<td style='text-align: right; color: red;'>{} voti</td>".format(int(max))
             legend_html += "</tr>"
             # Second row with gradient rectangle
@@ -315,7 +363,6 @@ if boolean:
         
         #caso piu votato
         else:
-            valore=val['Più votato']
             predefined_colors = [[255, 0, 0, 100],   # Red
                     [0, 255, 0, 100],   # Green
                     [0, 0, 255, 100],   # Blue
@@ -367,7 +414,6 @@ if boolean:
             extruded=False,
             wireframe=False,
             line_width_min_pixels=0.5,
-            pickable=True
         )
         layer2 = pdk.Layer(
             "GeoJsonLayer",
@@ -404,12 +450,13 @@ if boolean:
         st.pydeck_chart(deck)
 
     with right_column:
-        if piu_vot==True:
-            st.markdown("<div style='margin-top: 150px;'>Clicca su una sezione per visualizzare i dati completi.</div>", unsafe_allow_html=True)
-        else:
+        if affl==True:
+            merged = merged.drop_duplicates(subset=(['sezione']))
+            merged['Voti']=(merged['Voti'].fillna(0)*100).round(2).astype(str)+"%"
+            merged.rename(columns={'Voti': 'Affluenza'}, inplace=True) 
             st.markdown("<div style='margin-top: 70px;'></div>", unsafe_allow_html=True)
-            st.dataframe(data[['SEZIONE', 'Voti']])
+            st.write('Puoi ordinare rispetto all\'affluenza in ordine crescente o decrescente cliccando su afflueza')
+            st.dataframe(merged[['SEZIONE', 'Affluenza']], width=200, hide_index=True)
 
     
-
 
