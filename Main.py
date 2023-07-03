@@ -455,13 +455,13 @@ if boolean:
             merged['Voti']=(merged['Voti'].fillna(0)*100).round(2).astype(str)+"%"
             merged.rename(columns={'Voti': 'Affluenza'}, inplace=True) 
             st.markdown("<div style='margin-top: 70px;'></div>", unsafe_allow_html=True)
-            st.write('Clicca su affluenza per ordinare in ordine crescente o decrescente')
-            st.dataframe(merged[['SEZIONE', 'Affluenza']], width=200, hide_index=True)
+            st.write('Clicca su una colonna per ordinarla')
+            st.dataframe(merged[['SEZIONE', 'municipio', 'Affluenza']], width=200, hide_index=True)
         if piu_vot==False:
             merged = merged.drop_duplicates(subset=(['sezione']))
             st.markdown("<div style='margin-top: 70px;'></div>", unsafe_allow_html=True)
-            st.write('Clicca su voti per ordinare in ordine crescente o decrescente')
-            st.dataframe(merged[['SEZIONE', 'Voti']], width=200, hide_index=True)
+            st.write('Clicca su una colonna per ordinarla')
+            st.dataframe(merged[['SEZIONE', 'municipio', 'Voti']], width=200, hide_index=True)
     
 
     
