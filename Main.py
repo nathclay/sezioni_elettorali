@@ -9,142 +9,168 @@ import pydeck as pdk
 from matplotlib.colors import ListedColormap
 import random
 
+#il path dove sono i dati.
 path_folder = ""
 st.set_page_config(layout='wide')
 
-#funzioni
-def dati(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
-    #caso elezione amministrative
-    if municipio is not None:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
-    else:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun
+#funzione che ritorna il path specifico per l'elezione in questione
+def func_path(anno, elezione, com_mun=None, municipio=None):
+    #caso elezioni amministrative
+    if com_mun is not None:
+        if municipio is not None:
+            path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
+        else:
+            path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun
 
+    #caso elezioni camera
+    elif elezione=='camera':
+        path=path_folder+anno+"/"+anno+"_"+elezione+".csv"
 
-    if presidente is not None:
-        path=path+"_presidente.csv"
+    #caso elezioni regionali
+    elif elezione=='regionali':
+        path=path_folder+anno+"/"+anno+"_"+elezione
+
+    return path
+
+#funzione che ritorna il dataframe nel caso piu_vot=False
+def dati(anno, elezione, tipologia=None, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
+    path=func_path(anno, elezione, com_mun, municipio)
+
+    #caso elezioni amministrative
+    if elezione=='amministrative':
+        if tipologia !='affluenza':
+            df=pd.read_csv(path+"_"+tipologia+".csv")
+        #a seconda della tipologia bisogna aggiungere una colonna e rinominare il dato dei voti per avere sempre lo stesso nome da usare nelle altre funzioni
+        #Se ci fosse un partito/sindaco/presidente chiamato "Voti" darebbe errore
+        if tipologia=='affluenza':
+            #nel caso dell'affluenza i dati li prendiamo dal file partito.csv
+            df=pd.read_csv(path+"_partito.csv")
+            df.rename(columns={'AFFLUENZA':'Voti'}, inplace=True)
+        elif tipologia=='sindaco':
+            df['Sindaco']=sindaco
+            df.rename(columns={sindaco: 'Voti'}, inplace=True)
+        elif tipologia=='presidente':
+            df['Presidente']=presidente
+            df.rename(columns={presidente: 'Voti'}, inplace=True) 
+        elif tipologia=='partito':
+            df['Partito']=partito
+            df.rename(columns={partito: 'Voti'}, inplace=True) 
+        elif tipologia=='candidato':
+            df = df[df["CANDIDATO"] == candidato]
+            df.rename(columns={"PREFERENZE": 'Voti'}, inplace=True) 
+        elif tipologia=='ballottaggio':
+            df=df.iloc[:,:-2]
+
+    #caso elezioni camera
+    elif elezione=='camera':
         df=pd.read_csv(path) 
-        df['Presidente']=presidente
-        filtered_df = df[["SEZIONE", 'Presidente',presidente]]
-        filtered_df.rename(columns={presidente: 'Voti'}, inplace=True) 
-    elif tipologia=='affluenza':
-        df=pd.read_csv(path+"_partito.csv")
-        filtered_df=df[['SEZIONE','AFFLUENZA']]
-        filtered_df.rename(columns={'AFFLUENZA':'Voti'}, inplace=True)
-    elif sindaco is not None:
-        path=path+"_sindaco.csv"
-        df=pd.read_csv(path)
-        df['Sindaco']=sindaco
-        filtered_df = df[["SEZIONE", 'Sindaco', sindaco]] 
-        filtered_df.rename(columns={sindaco: 'Voti'}, inplace=True) 
-    elif partito is not None:
-        path=path+"_partito.csv"
-        df=pd.read_csv(path)
-        df['Partito']=partito
-        filtered_df=df[["SEZIONE", 'Partito', partito]]
-        filtered_df.rename(columns={partito: 'Voti'}, inplace=True) 
-    elif candidato is not None:
-        path=path+"_candidato.csv"
-        df=pd.read_csv(path)
-        filt = df[df["CANDIDATO"] == candidato]
-        filt['Candidato']=candidato
-        filtered_df=filt[["SEZIONE", 'Candidato', "PREFERENZE"]]
-        filtered_df.rename(columns={"PREFERENZE": 'Voti'}, inplace=True) 
-    else:
-        path=path+"_ballottaggio.csv"
-        df=pd.read_csv(path)
-        filtered_df=df.iloc[:,:-2]
-    return (filtered_df)
-    
-def piu_votato(anno, elezione, tipologia, com_mun=None, municipio=None, partito=None, presidente=None, sindaco=None, candidato=None):
-    if municipio is not None:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)
-    else:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun
-    dict={'presidente': 'presidente piu votato', 'sindaco': 'sindaco piu votato', 'partito': 'partito piu votato', 'candidato': 'candidato piu votato'}
+        if tipologia=='affluenza':
+            df.rename(columns={'AFFLUENZA':'Voti'}, inplace=True)
+        else:
+            df.rename(columns={partito: 'Voti'}, inplace=True)
 
+    #caso elezioni regionali
+    elif elezione=='regionali':
+        if tipologia!='affluenza':
+            df=pd.read_csv(path+"_"+tipologia+".csv")
+        if tipologia=='affluenza':
+            #nel caso dell'affluenza i dati li prendiamo dal file partito.csv
+            df=pd.read_csv(path+"_partito.csv")
+            df.rename(columns={'AFFLUENZA':'Voti'}, inplace=True)
+        elif tipologia=='presidente':
+            df=pd.read_csv(path+"_"+tipologia+".csv")
+            df['Preisdente']=presidente
+            df.rename(columns={presidente: 'Voti'}, inplace=True)
+        elif tipologia=='candidato':
+            df=pd.read_csv(path+"_"+tipologia+".csv")
+            df = df[df["CANDIDATO"] == candidato]
+            df.rename(columns={"PREFERENZE": 'Voti'}, inplace=True) 
+        elif tipologia=='partito':
+            df['Partito']=partito
+            df.rename(columns={partito: 'Voti'}, inplace=True)
+
+
+    #il dataframe nel caso candidato è del tipo: sezione, candidato, voti, lista. La colonna lista e candidato contengono per tutte le righe il nome del candidato e la lista associata
+    #In tutti gli altri casi: sezione, tutti i partiti/sindaci/presidenti con quello specifico rinominato Voti, Totale, affluenza, 
+    # colonna aggiunta "partito/sindaco/presidnete" con tutti i valori uguali al presidente/sindaco/partito scelto
+    return (df)
+    
+def piu_votato(anno, elezione, tipologia=None, com_mun=None, municipio=None):
+    path=func_path(anno, elezione, com_mun, municipio)
     value_to_subtract=-2
 
-    if presidente is not None:
-        path=path+"_presidente.csv"
-        df=pd.read_csv(path)
-        val=dict['presidente']
-    elif sindaco is not None:
-        path=path+"_sindaco.csv"
-        df=pd.read_csv(path)
-        val=dict['sindaco']
-    elif partito is not None:
-        if municipio is not None:
+    #caso elezioni amministrative
+    if com_mun is not None:
+        df=pd.read_csv(path+"_"+tipologia+".csv")
+        if tipologia=='partito' and municipio is not None:
             value_to_subtract=-3
-        path=path+"_partito.csv"
-        df=pd.read_csv(path)
-        val=dict['partito']
-    elif candidato is not None:
-        path=path+"_candidato.csv"
-        df=pd.read_csv(path)
-        val=dict['candidato']
-    else:
-        if municipio is not None:
+        elif tipologia=='ballottaggio' and municipio is not None:
             value_to_subtract=-3
-        path=path+"_ballottaggio.csv"
+
+    #caso elezioni camera
+    elif elezione=='camera':
         df=pd.read_csv(path)
 
-    # Get the column with the highest value for each row
+    #caso elezioni regionali
+    elif elezione=='regionali':
+        df=pd.read_csv(path+"_"+tipologia+".csv")
+        if tipologia=='presidente':
+            value_to_subtract=-1
+
+    #trova per ogni sezione il candidato/sindaco/presidente/partito piu votato, salvalo in una colonna "piu votato" e in una "voti" i suoi voti
     df["Più votato"] = df.iloc[:, 1:value_to_subtract].idxmax(axis=1)
     df["Voti"] = df.iloc[:, 1:value_to_subtract].max(axis=1)
-    # Create a new dataset with the desired columns
-    new_df = df[["SEZIONE", "Più votato", "Voti"]]
-    return(new_df)
+    
+    #il dataframe è del tipo: sezione, tutti i partiti/sindaci/presidenti, Totale, affluenza, 
+    # colonna aggiunta "Piu votato" con tutti i valori uguali al presidente/sindaco/partito scelto, colonna aggiunta "Voti" con i suoi voti
+    return(df)
 
 
 
 def find_partiti(anno, elezione, com_mun=None, municipio=None):
+    path=func_path(anno, elezione, com_mun, municipio)
+    subtract=-2
     #caso elezioni amministrative
-    if municipio is not None:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_partito.csv"
-        subtract=-3
-    else:
-        path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_partito.csv"
-        subtract=-2
+    if com_mun is not None:
+        path=path+"_partito.csv"
+        if municipio is not None:
+            subtract=-3
+
+    #caso elezioni camera o regionali
+    elif elezione=='regionali':
+        path=path+"_partito.csv"
+
     df = pd.read_csv(path)
     header = df.columns[1:subtract].tolist()  
     header.insert(0,'Più votato')
+
     return header
 
 
 def find_candidati(anno, elezione, partito, com_mun=None, municipio=None):
-    #caso elezioni amministrative
-    if municipio is not None:
-        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_candidato.csv"
-    else:
-        file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_candidato.csv"
-    df = pd.read_csv(file_path)
+    path=func_path(anno, elezione, com_mun, municipio)
+    #caso elezioni amministrative o regionali
+    if com_mun is not None or elezione=='regionali':
+        path=path+"_candidato.csv"
+        
+    df = pd.read_csv(path)
     distinct_candidati = df.drop_duplicates(subset='CANDIDATO')[['LISTA', 'CANDIDATO']]
     filtered_df = distinct_candidati[df["LISTA"] == partito]
     distinct_candidati = filtered_df["CANDIDATO"].unique().tolist()
     return distinct_candidati
 
-def find_presidenti(anno, elezione, com_mun, municipio):
-    #solo caso municipali
-    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_municipio"+str(municipio)+"_presidente.csv"
-    df = pd.read_csv(file_path)
-    header = df.columns[1:-2].tolist()  
-    header.insert(0,'Più votato')
-    return header
-
-def find_sindaci(anno, elezione, com_mun):
-    #solo caso comunali
-    file_path=path_folder+anno+"/"+anno+"_"+elezione+"_"+com_mun+"_sindaco.csv"
-    df = pd.read_csv(file_path)
+def find_sindaci(anno, elezione, tipologia, com_mun, municipio):
+    path=func_path(anno, elezione, com_mun, municipio)
+    path=path+"_"+tipologia+".csv"
+    df = pd.read_csv(path)
     header = df.columns[1:-2].tolist()  
     header.insert(0,'Più votato')
     return header
 
 
 
-
-#qui il codice del sidebar per scegliere l'elezione
-anno = st.sidebar.selectbox('Scegli l\'anno',['2021'])
+#SIDEBAR SCELTA ELEZIONE
+anno = st.sidebar.selectbox('Scegli l\'anno',['2021','2022','2023'])
 if anno == '2016' or anno=='2021':
     val=['amministrative']
 elif anno == '2018':
@@ -158,12 +184,65 @@ elif anno == '2023':
 
 elezione=st.sidebar.selectbox('Scegli l\'elezione', val)
 
-#caso elezioni amministrative
-if elezione=='amministrative':
+com_mun=None
+piu_vot=False
+affl=False
+
+
+#caso elezioni regionali
+if elezione=='regionali':
+    tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza', 'partito', 'candidato'])
+    if tipologia =='affluenza':
+        affl=True
+        data=dati(anno, elezione, tipologia)
+    elif tipologia == 'candidato':
+        values=find_partiti(anno, elezione)
+        values.pop(0)
+        partito=st.sidebar.selectbox('Seleziona il partito',values)
+        values=find_candidati(anno, elezione, partito)
+        candidato=st.sidebar.selectbox('Seleziona il candidato',values)
+        data=dati(anno, elezione, tipologia, candidato=candidato)
+    elif tipologia == 'presidente':
+        values=find_sindaci(anno, elezione, tipologia)
+        presidente=st.sidebar.selectbox('Seleziona', values)
+        if presidente=='Più votato':
+            piu_vot=True
+            data=piu_votato(anno, elezione, tipologia)
+        else:
+            data=dati(anno, elezione, tipologia, presidente=presidente)
+    elif tipologia == 'partito':
+        values=find_partiti(anno, elezione)
+        partito=st.sidebar.selectbox('Seleziona', values)
+        if partito=='Più votato':
+            piu_vot=True
+            data=piu_votato(anno, elezione, tipologia)
+        else:
+            data=dati(anno, elezione, tipologia, partito=partito)
+
+#caso elezioni camera
+elif elezione=='camera':
+    com_mun=None
     piu_vot=False
     affl=False
+    tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza','partito'])
+
+    if tipologia =='affluenza':
+        affl=True
+        data=dati(anno, elezione, tipologia)
+    else:
+        values=find_partiti(anno, elezione)
+        partito=st.sidebar.selectbox('Seleziona', values)
+        if partito=='Più votato':
+            piu_vot=True
+            data=piu_votato(anno, elezione, tipologia)
+        else:
+            data=dati(anno, elezione, partito=partito)
+
+
+#caso elezioni amministrative
+elif elezione=='amministrative':
+    #selezione elezione municipale o comunale
     com_mun=st.sidebar.selectbox('Municipali o comunali?',['comunali', 'municipali'])
-    #distionzione municipali/comunali
     if com_mun=='municipali':
         municipio=st.sidebar.selectbox('Seleziona il municipio', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
         tipologia=st.sidebar.selectbox('Che dato ti interessa?', ['affluenza','presidente','partito','candidato', 'ballottaggio'])
@@ -175,31 +254,27 @@ if elezione=='amministrative':
         turno=st.sidebar.selectbox('Primo turno o ballottaggio?', ['primo turno', 'ballottaggio'])
         data=dati(anno, elezione, tipologia, com_mun, municipio)
         affl=True
-    if tipologia == 'candidato':
+    elif tipologia == 'candidato':
         values=find_partiti(anno, elezione, com_mun, municipio)
         values.pop(0)
         partito=st.sidebar.selectbox('Seleziona il partito',values)
         values=find_candidati(anno, elezione, partito, com_mun, municipio)
         candidato=st.sidebar.selectbox('Seleziona il candidato',values)
-        if candidato=='Più votato':
-            piu_vot=True
-            data=piu_votato(anno, elezione, tipologia, com_mun, municipio, candidato=candidato)
-        else:
-            data=dati(anno, elezione, tipologia, com_mun, municipio, candidato=candidato)
+        data=dati(anno, elezione, tipologia, com_mun, municipio, candidato=candidato)
     elif tipologia == 'presidente':
-        values=find_presidenti(anno, elezione, com_mun, municipio)
+        values=find_sindaci(anno, elezione, tipologia, com_mun, municipio)
         presidente=st.sidebar.selectbox('Seleziona', values)
         if presidente=='Più votato':
             piu_vot=True
-            data=piu_votato(anno, elezione, tipologia, com_mun, municipio, presidente=presidente)
+            data=piu_votato(anno, elezione, tipologia, com_mun, municipio)
         else:
             data=dati(anno, elezione, tipologia, com_mun, municipio, presidente=presidente)
     elif tipologia == 'sindaco':
-        values=find_sindaci(anno, elezione, com_mun)
+        values=find_sindaci(anno, elezione, tipologia, com_mun, municipio)
         sindaco=st.sidebar.selectbox('Seleziona', values)
         if sindaco=='Più votato':
             piu_vot=True
-            data=piu_votato(anno, elezione, tipologia, com_mun, sindaco=sindaco)
+            data=piu_votato(anno, elezione, tipologia, com_mun)
         else:
             data=dati(anno, elezione, tipologia, com_mun, sindaco=sindaco)
     elif tipologia == 'partito':
@@ -207,7 +282,7 @@ if elezione=='amministrative':
         partito=st.sidebar.selectbox('Seleziona', values)
         if partito=='Più votato':
             piu_vot=True
-            data=piu_votato(anno, elezione, tipologia, com_mun, municipio, partito=partito)
+            data=piu_votato(anno, elezione, tipologia, com_mun, municipio)
         else:
             data=dati(anno, elezione, tipologia, com_mun, municipio, partito=partito)
     elif tipologia == 'ballottaggio':
@@ -220,16 +295,18 @@ if elezione=='amministrative':
 
 left_column, right_column = st.columns([0.75, 0.2])
 
-if com_mun=='comunali':
+if elezione=='camera' or com_mun=='comunali' or elezione=='regionali':
             selezione=st.sidebar.selectbox('Vuoi visualizzare la mappa di tutta Roma o di un singolo municipio?', ['Tutta Roma', 'Municipio 1', 'Municipio 2', 'Municipio 3', 'Municipio 4', 'Municipio 5', 'Municipio 6', 'Municipio 7', 'Municipio 8', 'Municipio 9', 'Municipio 10', 'Municipio 11', 'Municipio 12', 'Municipio 13', 'Municipio 14', 'Municipio 15'])
             values_municipi={'Tutta Roma':0, 'Municipio 1': 1, 'Municipio 2': 2, 'Municipio 3': 3, 'Municipio 4': 4, 'Municipio 5': 5, 'Municipio 6': 6, 'Municipio 7': 7, 'Municipio 8': 8, 'Municipio 9': 9, 'Municipio 10': 10, 'Municipio 11': 11, 'Municipio 12': 12, 'Municipio 13': 13, 'Municipio 14': 14, 'Municipio 15':15}
             municipio = values_municipi[selezione]
 
 #bottone per far partire il download solo dopo la selezione 
+
 boolean = st.sidebar.button('Invia')
 if not boolean:
     st.header('Tool grafico dati elettorali di Roma')
     st.write('Seleziona un\'elezione nel menu a sinistra')
+
 if boolean:
     with left_column:
         #coordinate dei centroidi dei municipi. Start from 0=tutta roma
@@ -260,7 +337,6 @@ if boolean:
         
         merged = pd.merge(gdf, data, left_on="sezione", right_on="SEZIONE")
 
-        val={'Voti': 'Voti', 'Più votato': 'Più votato'}
         color_scale = [[255, 255, 255, 100],  # White
             [0, 0, 255, 100],      # Blue
             [255, 0, 0, 100]       # Red
@@ -280,6 +356,7 @@ if boolean:
                     b = int(color_scale[index][2] * (1 - v) + color_scale[index+1][2] * v)
                     a = int(color_scale[index][3] * (1 - v) + color_scale[index+1][3] * v)
                     return [r, g, b, a]
+        
         #caso affluenza
         if affl==True:
             merged['fill_color'] = merged['Voti'].apply(get_fill_color)
@@ -371,6 +448,7 @@ if boolean:
                     ]
             # Get distinct values from the "piu votato" column
             distinct_values = merged['Più votato'].unique()
+            distinct_values=sorted(distinct_values)
             # Assign predefined colors to the first five distinct values
             color_mapping = dict(zip(distinct_values[:5], predefined_colors))
             # Generate random colors for additional distinct values, if any
@@ -462,7 +540,5 @@ if boolean:
             st.markdown("<div style='margin-top: 70px;'></div>", unsafe_allow_html=True)
             st.write('Clicca su una colonna per ordinarla')
             st.dataframe(merged[['SEZIONE', 'municipio', 'Voti']], width=200, hide_index=True)
-    
-
     
 
